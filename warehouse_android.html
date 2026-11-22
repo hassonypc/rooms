@@ -659,6 +659,12 @@
                 </div>
             </div>
             <button type="button" class="btn-action" style="background: linear-gradient(135deg, #0EA5E9, #6366F1, #8B5CF6);" onclick="showRecords()">📊 عرض سجل الحركات والتقارير والنسخ الاحتياطي</button>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px;">
+                <button type="button" class="btn-action" style="margin-top: 0; padding: 14px 10px; font-size: 15px; background: linear-gradient(135deg, #059669, #10B981);" onclick="exportAllDataBackup()">💾 نسخة احتياطية</button>
+                <label class="btn-action" style="margin: 0; padding: 14px 10px; font-size: 15px; text-align: center; cursor: pointer; display: block; background: linear-gradient(135deg, #D97706, #F59E0B);">
+                    📂 استعادة نسخة <input type="file" id="homeImportBackupInput" accept="application/json,.json" style="display:none;" onchange="importAllDataBackup(event)">
+                </label>
+            </div>
             <button type="button" class="btn-action btn-secondary" onclick="logout()" style="background: linear-gradient(135deg, #E11D48, #9F1239);">🔒 قفل البرنامج والخروج</button>
         </div>
 
@@ -2339,6 +2345,11 @@
                 'img{max-width:100%}@media print{body{padding:0}}' +
                 '</style></head><body>' + area.innerHTML + '</body></html>';
             const stamp = formatCurrentDate().replace(/[^0-9]/g, '_');
+            // الأفضل: نافذة طباعة أندرويد الأصلية (فيها خيار حفظ بصيغة PDF)
+            if (window.AndroidPrint && typeof window.AndroidPrint.printHtml === 'function') {
+                window.AndroidPrint.printHtml(html, 'report_' + stamp);
+                return;
+            }
             await saveAndShareFile('report_' + stamp + '.html', html, 'text/html', 'مشاركة التقرير للطباعة');
         } catch (err) {
             const msg = String((err && err.message) || err || '');
