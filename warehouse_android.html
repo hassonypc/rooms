@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الغرف الأمنة - النظام المتكامل</title>
+    <style>
+        :root {
+            --primary: #7C3AED;
+            --primary-dark: #5B21B6;
+            --accent: #06B6D4;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --info: #38BDF8;
+            --purple: #A855F7;
+            --danger: #F43F5E;
+            --bg: #070B19;
+            --bg-gradient: radial-gradient(circle at 15% 15%, rgba(124, 58, 237, 0.22), transparent 40%),
+                           radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.18), transparent 42%),
+                           radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.14), transparent 45%),
+                           #070B19;
+            --card-bg: rgba(17, 24, 39, 0.82);
+            --text: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: rgba(148, 163, 184, 0.18);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            padding: 20px;
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 860px; margin: 0 auto; }
+
+        /* Animations */
+        @keyframes fadeSlideIn {
+            0% { opacity: 0; transform: translateY(16px) scale(0.985); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes floatSoft {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.25); }
+            50% { box-shadow: 0 0 18px 3px rgba(245, 158, 11, 0.22); }
+        }
+
+        @keyframes titleShimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .anim-enter {
+            animation: fadeSlideIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        h1, h2 { color: var(--text); text-align: center; font-weight: 800; }
+
+        h1 {
+            font-size: 27px;
+            margin-bottom: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(90deg, #F8FAFC, #67E8F9, #C4B5FD, #F8FAFC);
+            background-size: 220% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleShimmer 6s ease infinite;
+        }
+
+        h1 span {
+            -webkit-text-fill-color: initial;
+            filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.65));
+            animation: floatSoft 3s ease-in-out infinite;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            padding: 26px;
+            border-radius: 24px;
+            box-shadow: 0 24px 45px -12px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            margin-bottom: 22px;
+            border: 1px solid var(--border);
+            animation: fadeSlideIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .hidden { display: none !important; }
+
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 14px; color: #CBD5E1; }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            margin-top: 7px;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            font-size: 16px;
+            background: rgba(9, 13, 28, 0.85);
+            color: white;
+            transition: all 0.25s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.16);
+            transform: translateY(-1px);
+        }
+
+        input[type="file"] { padding: 10px; cursor: pointer; }
+
+        #loginScreen {
+            max-width: 450px;
+            margin: 42px auto;
+            text-align: center;
+            background: linear-gradient(155deg, rgba(30, 27, 75, 0.9), rgba(15, 23, 42, 0.92));
+            border: 1.5px solid rgba(139, 92, 246, 0.45);
+            box-shadow: 0 25px 60px rgba(124, 58, 237, 0.25);
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(7, 11, 25, 0.75);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 11px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.28s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #7C3AED, #06B6D4);
+            color: white;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35);
+            transform: scale(1.02);
+        }
+
+        /* قائمة الأقسام المتحركة */
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .btn-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.88));
+            border: 1.5px solid var(--border);
+            border-radius: 22px;
+            padding: 24px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.32s ease, box-shadow 0.32s ease;
+            animation: fadeSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .btn-card:nth-child(1) { animation-delay: 0.04s; }
+        .btn-card:nth-child(2) { animation-delay: 0.08s; }
+        .btn-card:nth-child(3) { animation-delay: 0.12s; }
+        .btn-card:nth-child(4) { animation-delay: 0.16s; }
+        .btn-card:nth-child(5) { animation-delay: 0.20s; }
+        .btn-card:nth-child(6) { animation-delay: 0.24s; }
+        .btn-card:nth-child(7) { animation-delay: 0.28s; }
+        .btn-card:nth-child(8) { animation-delay: 0.32s; }
+
+        .btn-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 70%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
+            transform: skewX(-22deg);
+            transition: left 0.65s ease;
+        }
+
+        .btn-card:hover::before {
+            left: 150%;
+        }
+
+        .btn-card:hover {
+            transform: translateY(-6px) scale(1.015);
+            border-color: currentColor;
+            box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.55), 0 0 22px -4px currentColor;
+        }
+
+        .btn-card:active {
+            transform: translateY(-2px) scale(0.98);
+        }
+
+        .btn-card h3 {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: 800;
+            color: #F8FAFC;
+            letter-spacing: 0.2px;
+            transition: transform 0.25s ease;
+        }
+
+        .btn-card:hover h3 {
+            transform: translateY(-2px);
+        }
+
+        .icon-box {
+            font-size: 40px;
+            margin-bottom: 4px;
+            display: inline-block;
+            animation: floatSoft 3.6s ease-in-out infinite;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-card:hover .icon-box {
+            transform: scale(1.2) rotate(-6deg);
+            animation-play-state: paused;
+        }
+
+        .btn-action {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #7C3AED, #2563EB, #06B6D4);
+            background-size: 180% 180%;
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            width: 100%;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 18px;
+            box-shadow: 0 10px 24px -6px rgba(124, 58, 237, 0.45);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background-position 0.45s ease;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            background-position: 100% 50%;
+            box-shadow: 0 16px 30px -6px rgba(6, 182, 212, 0.48);
+        }
+
+        .btn-action:active {
+            transform: translateY(0) scale(0.99);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #334155, #1E293B);
+            box-shadow: 0 8px 18px -6px rgba(15, 23, 42, 0.6);
+            margin-top: 11px;
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 12px 22px -6px rgba(148, 163, 184, 0.25);
+        }
+
+        .toggle-sig-btn {
+            background: rgba(6, 182, 212, 0.1);
+            color: #67E8F9;
+            border: 2px dashed rgba(6, 182, 212, 0.55);
+            width: 100%;
+            padding: 13px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-top: 10px;
+            text-align: center;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .toggle-sig-btn:hover {
+            background: rgba(6, 182, 212, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .sig-done {
+            background: rgba(16, 185, 129, 0.16) !important;
+            color: #34D399 !important;
+            border-color: var(--success) !important;
+            border-style: solid !important;
+        }
+
+        .sig-container {
+            margin-top: 10px;
+            border: 2px solid var(--accent);
+            border-radius: 14px;
+            background: rgba(9, 13, 28, 0.9);
+            padding: 12px;
+            text-align: center;
+            animation: fadeSlideIn 0.28s ease both;
+        }
+
+        canvas.sig-pad {
+            width: 100%;
+            height: 130px;
+            background: #1E293B;
+            border-radius: 10px;
+            cursor: crosshair;
+            touch-action: none;
+            border: 1px solid var(--border);
+        }
+
+        .sig-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 9px; font-size: 13px; }
+        .clear-sig-btn { background: rgba(244, 63, 94, 0.15); color: #FB7185; border: 1px solid var(--danger); padding: 7px 13px; border-radius: 9px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .clear-sig-btn:hover { background: var(--danger); color: white; }
+        .close-sig-btn { background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 7px 15px; border-radius: 9px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .close-sig-btn:hover { transform: scale(1.03); }
+
+        .photo-capture-box {
+            border: 2px dashed rgba(148, 163, 184, 0.32);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            margin-top: 7px;
+            background: rgba(9, 13, 28, 0.72);
+            transition: border-color 0.25s ease;
+        }
+
+        .photo-capture-box:hover { border-color: var(--accent); }
+
+        .photo-preview-img {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2.5px solid var(--success);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+            display: inline-block;
+            margin-bottom: 7px;
+            animation: fadeSlideIn 0.3s ease both;
+        }
+
+        .date-range-panel {
+            background: rgba(9, 13, 28, 0.78);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 16px;
+        }
+
+        .date-range-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #93C5FD;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .date-range-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        .date-range-grid label {
+            margin-top: 0;
+        }
+
+        .date-range-grid input[type="date"] {
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-box {
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.68));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+            animation: fadeSlideIn 0.35s ease both;
+        }
+
+        .stat-box:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .stat-num { font-size: 25px; font-weight: 800; margin-top: 5px; }
+        .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+        .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+        .filter-btn {
+            padding: 9px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.85);
+            color: #CBD5E1;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.22s ease;
+        }
+
+        .filter-btn:hover { transform: translateY(-2px); border-color: var(--accent); color: white; }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #7C3AED, #06B6D4);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+        }
+
+        .backup-banner {
+            background: rgba(245, 158, 11, 0.13);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #FDE68A;
+            padding: 13px 16px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 14px;
+            animation: pulseGlow 2.8s infinite;
+        }
+
+        .record-item {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.9));
+            border-right: 6px solid var(--accent);
+            padding: 18px;
+            margin-bottom: 15px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            animation: fadeSlideIn 0.35s ease both;
+        }
+
+        .record-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px -10px rgba(0, 0, 0, 0.55);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .record-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn { padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px; border: none; transition: all 0.2s ease; }
+        .action-btn:hover { transform: translateY(-2px); }
+        .edit-btn { background: rgba(56, 189, 248, 0.16); color: #7DD3FC; border: 1px solid rgba(56, 189, 248, 0.5); }
+        .print-btn { background: rgba(16, 185, 129, 0.16); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.5); }
+        .delete-btn { background: rgba(244, 63, 94, 0.16); color: #FDA4AF; border: 1px solid rgba(244, 63, 94, 0.5); }
+        .delete-btn:hover { background: var(--danger); color: white; }
+
+        .time-badge {
+            background: linear-gradient(90deg, rgba(124, 58, 237, 0.18), rgba(6, 182, 212, 0.18));
+            color: #A5F3FC;
+            border: 1px solid rgba(103, 232, 249, 0.3);
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 7, 18, 0.86);
+            backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px;
+            animation: fadeSlideIn 0.25s ease both;
+        }
+
+        .custom-alert-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.82);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: fadeSlideIn 0.2s ease both;
+        }
+
+        .custom-alert-box {
+            background: linear-gradient(155deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98));
+            color: #F8FAFC;
+            border: 1.5px solid rgba(6, 182, 212, 0.5);
+            border-radius: 18px;
+            padding: 24px 20px;
+            max-width: 390px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.65);
+        }
+
+        .custom-alert-msg {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.65;
+            margin-bottom: 20px;
+            color: #F8FAFC;
+        }
+
+        .custom-alert-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #7C3AED, #06B6D4);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .custom-alert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.35);
+        }
+
+        @media (max-width: 560px) {
+            .grid-menu { gap: 12px; }
+            .btn-card { padding: 20px 12px; border-radius: 18px; }
+            .btn-card h3 { font-size: 16px; }
+            .icon-box { font-size: 34px; }
+            h1 { font-size: 22px; }
+        }
+
+        @media print {
+            body * { visibility: hidden !important; }
+            #printableTicketArea, #printableTicketArea * { visibility: visible !important; }
+            #printableTicketArea {
+                position: absolute; left: 0; top: 0; width: 100% !important; background: #ffffff !important; color: #000000 !important;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 1. تسجيل الدخول -->
+    <div id="loginScreen" class="card">
+        <h2 style="color: white; margin-bottom: 15px;">🛡️ بوابة النظام الأمنية</h2>
+
+        <div class="login-tabs">
+            <button type="button" class="tab-btn active" id="tabCredBtn" onclick="switchLoginMode('cred')">🔑 يوزر وكلمة مرور</button>
+            <button type="button" class="tab-btn" id="tabBioBtn" onclick="switchLoginMode('bio')">🔢 الرمز السريع (PIN)</button>
+        </div>
+
+        <div id="credLoginSection">
+            <label style="text-align: right;">اسم المستخدم:</label>
+            <input type="text" id="loginUser" placeholder="أدخل اسم المستخدم ...">
+            <label style="text-align: right;">كلمة المرور:</label>
+            <input type="password" id="loginPass" placeholder="أدخل كلمة المرور ...">
+            <button type="button" class="btn-action" onclick="checkLogin()">🔓 تسجيل الدخول</button>
+        </div>
+
+        <div id="bioLoginSection" class="hidden" style="text-align: center; padding: 10px 0;">
+            <label style="text-align: right;">أدخل الرمز السريع (PIN):</label>
+            <input type="password" id="quickPinInput" maxlength="6" inputmode="numeric" placeholder="••••" style="text-align: center; font-size: 24px; letter-spacing: 8px;">
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #10B981, #059669);" onclick="loginWithPin()">🔓 دخول بالرمز السريع</button>
+        </div>
+    </div>
+
+    <!-- 2. الواجهة الرئيسية -->
+    <div id="mainAppContent" class="hidden">
+        <h1><span>⚡</span> نظام إدارة الغرف الأمنة المتطور</h1>
+
+        <div id="homeScreen" class="anim-enter">
+            <div class="grid-menu">
+                <div class="btn-card" style="color: #34D399;" onclick="openForm('الأدخال', true, true)">
+                    <span class="icon-box">📥</span>
+                    <h3>الأدخال</h3>
+                </div>
+                <div class="btn-card" style="color: #FBBF24;" onclick="openForm('خروج للصيانة', true, false)">
+                    <span class="icon-box">🔧</span>
+                    <h3>خروج للصيانة</h3>
+                </div>
+                <div class="btn-card" style="color: #38BDF8;" onclick="openForm('الأخراج', true, true)">
+                    <span class="icon-box">🚚</span>
+                    <h3>الأخراج</h3>
+                </div>
+                <div class="btn-card" style="color: #C084FC;" onclick="openForm('زيارة فحص', false, false)">
+                    <span class="icon-box">📋</span>
+                    <h3>زيارة فحص فقط</h3>
+                </div>
+                <div class="btn-card" style="color: #F59E0B;" onclick="openNotesForm()">
+                    <span class="icon-box">📌</span>
+                    <h3>الملاحظات</h3>
+                </div>
+                <div class="btn-card" style="color: #22D3EE;" onclick="openChangesForm()">
+                    <span class="icon-box">🔄</span>
+                    <h3>التغييرات</h3>
+                </div>
+                <div class="btn-card" style="color: #A78BFA;" onclick="openPmForm()">
+                    <span class="icon-box">🛠️</span>
+                    <h3>PM</h3>
+                </div>
+                <div class="btn-card" style="color: #FB7185;" onclick="openViolationForm()">
+                    <span class="icon-box">⚠️</span>
+                    <h3>تسجيل وإدارة المخالفات</h3>
+                </div>
+            </div>
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #0EA5E9, #6366F1, #8B5CF6);" onclick="showRecords()">📊 عرض سجل الحركات والتقارير والنسخ الاحتياطي</button>
+            <button type="button" class="btn-action btn-secondary" onclick="logout()" style="background: linear-gradient(135deg, #E11D48, #9F1239);">🔒 قفل البرنامج والخروج</button>
+        </div>
+
+        <!-- نموذج PM -->
+        <div id="pmFormScreen" class="card hidden">
+            <h2 style="margin-bottom: 15px; color: #C4B5FD; text-align: right;">🛠️ فحص الصيانة الوقائية (PM)</h2>
+            <input type="hidden" id="editPmId" value="">
+
+            <label>اسم الفاحص: *</label>
+            <select id="pmInspectorName">
+                <option value="">-- اختر اسم الفاحص --</option>
+                <option value="سيف">سيف</option>
+                <option value="مهيمن">مهيمن</option>
+                <option value="تقي">تقي</option>
+                <option value="سراج">سراج</option>
+            </select>
+
+            <label>تاريخ الفحص: *</label>
+            <input type="date" id="pmInspectionDate">
+
+            <label>ملاحظات الفحص: *</label>
+            <textarea id="pmNotes" rows="4" placeholder="اكتب ملاحظات الفحص هنا..."></textarea>
+
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #7C3AED, #4F46E5);" onclick="savePmRecord()">💾 حفظ فحص PM وعرض التكت</button>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">إلغاء والعودة</button>
+        </div>
+
+        <!-- نموذج الحركات العادية -->
+        <div id="formScreen" class="card hidden">
+            <h2 id="formTitle" style="margin-bottom: 15px; color: var(--info); text-align: right;">تسجيل حركة جديدة</h2>
+            <input type="hidden" id="editRecordId" value="">
+            <div class="time-badge" id="autoTime">الوقت والتاريخ: --</div>
+
+            <label>اسم الشخص (الداخل / الزائر / الفاحص): *</label>
+            <input type="text" id="visitorName" placeholder="أدخل اسم الشخص...">
+
+            <!-- صورة الفاحص -->
+            <label>📷 صورة الشخص الفاحص:</label>
+            <div class="photo-capture-box">
+                <div id="visitorPhotoPreviewContainer" class="hidden">
+                    <img id="visitorPhotoPreviewImg" class="photo-preview-img" alt="صورة الفاحص"><br>
+                    <button type="button" class="action-btn delete-btn" onclick="retakePhoto('visitor')">🔄 إعادة التقاط الصورة</button>
+                </div>
+                <div id="visitorPhotoBtnContainer" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="action-btn print-btn" style="flex: 1; padding: 10px; font-size: 14px;" onclick="openSelfieCamera('visitor')">🤳 كاميرا سيلفي</button>
+                    <label class="action-btn edit-btn" style="flex: 1; padding: 10px; font-size: 14px; text-align: center; margin: 0; cursor: pointer;">
+                        📁 اختيار من الجهاز <input type="file" id="visitorPhotoInput" accept="image/*" style="display:none;" onchange="handleFilePhoto(event, 'visitor')">
+                    </label>
+                </div>
+            </div>
+
+            <button type="button" class="toggle-sig-btn" id="visitorToggleBtn" onclick="toggleSigBox('visitor')">
+                <span>✍️</span> <span id="visitorToggleText">اضغط هنا لفتح لوحة توقيع الفاحص</span>
+            </button>
+
+            <div id="visitorSigContainer" class="sig-container hidden">
+                <canvas id="visitorSigCanvas" class="sig-pad"></canvas>
+                <div class="sig-actions">
+                    <button type="button" class="clear-sig-btn" onclick="clearSig('visitor')">🔄 مسح التوقيع</button>
+                    <button type="button" class="close-sig-btn" onclick="hideSigBox('visitor')">✓ اعتماد وإخفاء</button>
+                </div>
+            </div>
+
+            <label>اسم الفني المسؤول (مسؤول الغرف): *</label>
+            <input type="text" id="staffName" placeholder="أدخل اسم الفني المسؤول...">
+
+            <!-- صورة المسؤول -->
+            <label>📷 صورة الفني المسؤول:</label>
+            <div class="photo-capture-box">
+                <div id="staffPhotoPreviewContainer" class="hidden">
+                    <img id="staffPhotoPreviewImg" class="photo-preview-img" alt="صورة المسؤول"><br>
+                    <button type="button" class="action-btn delete-btn" onclick="retakePhoto('staff')">🔄 إعادة التقاط الصورة</button>
+                </div>
+                <div id="staffPhotoBtnContainer" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="action-btn print-btn" style="flex: 1; padding: 10px; font-size: 14px;" onclick="openSelfieCamera('staff')">🤳 كاميرا سيلفي</button>
+                    <label class="action-btn edit-btn" style="flex: 1; padding: 10px; font-size: 14px; text-align: center; margin: 0; cursor: pointer;">
+                        📁 اختيار من الجهاز <input type="file" id="staffPhotoInput" accept="image/*" style="display:none;" onchange="handleFilePhoto(event, 'staff')">
+                    </label>
+                </div>
+            </div>
+
+            <button type="button" class="toggle-sig-btn" id="staffToggleBtn" onclick="toggleSigBox('staff')">
+                <span>✍️</span> <span id="staffToggleText">اضغط هنا لفتح لوحة توقيع المسؤول</span>
+            </button>
+
+            <div id="staffSigContainer" class="sig-container hidden">
+                <canvas id="staffSigCanvas" class="sig-pad"></canvas>
+                <div class="sig-actions">
+                    <button type="button" class="clear-sig-btn" onclick="clearSig('staff')">🔄 مسح التوقيع</button>
+                    <button type="button" class="close-sig-btn" onclick="hideSigBox('staff')">✓ اعتماد وإخفاء</button>
+                </div>
+            </div>
+
+            <div id="deviceFields">
+                <label>نوع / اسم الجهاز: *</label>
+                <input type="text" id="deviceType" placeholder="مثال: راوتر ميكروتك، جهاز بصمة...">
+
+                <label>السيريال نمبر (Serial Number): *</label>
+                <input type="text" id="serialNumber" placeholder="اكتب السيريال نمبر هنا...">
+
+                <div id="custodyFieldBox" class="hidden">
+                    <label style="color: var(--success);">مسؤول الذمة: *</label>
+                    <input type="text" id="custodyHolder" placeholder="أدخل اسم مسؤول الذمة...">
+                </div>
+            </div>
+
+            <label id="detailsLabel">تفاصيل العطل أو ملاحظات النقل: *</label>
+            <textarea id="details" rows="3" placeholder="اكتب التفاصيل الكاملة هنا..."></textarea>
+
+            <button type="button" class="btn-action" onclick="saveRecord()">💾 حفظ السجل وعرض التكت</button>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">إلغاء والعودة</button>
+        </div>
+
+        <!-- نموذج الملاحظات -->
+        <div id="notesFormScreen" class="card hidden">
+            <h2 style="margin-bottom: 15px; color: var(--warning); text-align: right;">📌 إضافة ملاحظة جديدة</h2>
+            <input type="hidden" id="editNoteId" value="">
+            <div class="time-badge" id="notesAutoTime">وقت التسجيل: --</div>
+
+            <label>عنوان أو موضوع الملاحظة: *</label>
+            <input type="text" id="noteTitle" placeholder="أدخل عنوان الملاحظة...">
+
+            <label>نص الملاحظة والتفاصيل: *</label>
+            <textarea id="noteDetails" rows="4" placeholder="اكتب تفاصيل الملاحظة هنا..."></textarea>
+
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #F59E0B, #D97706);" onclick="saveNoteRecord()">💾 حفظ الملاحظة وعرض التكت</button>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">إلغاء والعودة</button>
+        </div>
+
+        <!-- نموذج التغييرات -->
+        <div id="changesFormScreen" class="card hidden">
+            <h2 style="margin-bottom: 15px; color: var(--info); text-align: right;">🔄 تسجيل تغيير جديد</h2>
+            <input type="hidden" id="editChangeId" value="">
+            <div class="time-badge" id="changesAutoTime">وقت التسجيل: --</div>
+
+            <label>نوع التغيير أو العنصر المُعدّل: *</label>
+            <input type="text" id="changeTitle" placeholder="مثال: تحديث إعدادات الراوتر، استبدال قطعة...">
+
+            <label>تفاصيل التغييرات الحاصلة: *</label>
+            <textarea id="changeDetails" rows="4" placeholder="اكتب تفاصيل التغييرات بدقة..."></textarea>
+
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #06B6D4, #0284C7);" onclick="saveChangeRecord()">💾 حفظ التغييرات وعرض التكت</button>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">إلغاء والعودة</button>
+        </div>
+
+        <!-- نموذج المخالفات -->
+        <div id="violationFormScreen" class="card hidden">
+            <h2 style="margin-bottom: 15px; color: var(--danger); text-align: right;">⚠️ تسجيل مخالفة جديدة</h2>
+            <input type="hidden" id="editViolationId" value="">
+
+            <label>حدد وقت وتاريخ وقوع المخالفة: *</label>
+            <input type="datetime-local" id="violationOccurrenceTime">
+
+            <label>اسم الشخص المخالف: *</label>
+            <input type="text" id="violatorName" placeholder="أدخل اسم الشخص المخالف...">
+
+            <label>نوع المخالفة: *</label>
+            <select id="violationType" onchange="checkOtherViolationType()">
+                <option value="">-- اختر نوع المخالفة --</option>
+                <option value="إدخال موبايل">إدخال موبايل</option>
+                <option value="غير مخول بالدخول">غير مخول بالدخول</option>
+                <option value="إهمال">إهمال</option>
+                <option value="عدم ترتيب عمله">عدم ترتيب عمله</option>
+                <option value="أخرى">أخرى</option>
+            </select>
+
+            <div id="otherViolationBox" class="hidden">
+                <label style="color: var(--warning);">اكتب نوع المخالفة الأخرى: *</label>
+                <input type="text" id="otherViolationInput" placeholder="اكتب نوع المخالفة هنا...">
+            </div>
+
+            <label>اسم الشخص مقدم المخالفة: *</label>
+            <input type="text" id="issuerName" placeholder="أدخل اسم مقدم المخالفة...">
+
+            <button type="button" class="toggle-sig-btn" id="issuerToggleBtn" onclick="toggleSigBox('issuer')">
+                <span>✍️</span> <span id="issuerToggleText">اضغط هنا لفتح توقيع مُقدّم المخالفة</span>
+            </button>
+
+            <div id="issuerSigContainer" class="sig-container hidden">
+                <canvas id="issuerSigCanvas" class="sig-pad"></canvas>
+                <div class="sig-actions">
+                    <button type="button" class="clear-sig-btn" onclick="clearSig('issuer')">🔄 مسح التوقيع</button>
+                    <button type="button" class="close-sig-btn" onclick="hideSigBox('issuer')">✓ اعتماد وإخفاء</button>
+                </div>
+            </div>
+
+            <label>الأدلة والثبوتيات (إن وجدت):</label>
+            <input type="text" id="violationEvidence" placeholder="اكتب الأدلة، الشهود، أو المرفقات...">
+
+            <label>تفاصيل وملاحظات إضافية حول المخالفة: *</label>
+            <textarea id="violationDetails" rows="3" placeholder="اكتب التفاصيل الكاملة للمخالفة هنا..."></textarea>
+
+            <button type="button" class="btn-action" style="background: linear-gradient(135deg, #F43F5E, #BE123C);" onclick="saveViolationRecord()">💾 حفظ المخالفة وعرض التكت</button>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">إلغاء والعودة</button>
+        </div>
+
+        <!-- شاشة التقاط السيلفي بالكاميرا الأمامية -->
+        <div id="selfieScreen" class="card hidden" style="text-align: center;">
+            <h3 style="margin-bottom: 10px; color: var(--success);">🤳 التقاط صورة شخصية (سيلفي)</h3>
+            <video id="selfieVideo" autoplay playsinline style="width: 100%; max-height: 320px; background: black; border-radius: 12px; border: 2px solid var(--success); transform: scaleX(-1);"></video>
+            <canvas id="selfieCanvas" class="hidden"></canvas>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="button" class="btn-action" style="background: linear-gradient(135deg, #10B981, #059669); margin-top:0; flex:1;" onclick="captureSelfiePhoto()">📸 التقاط الصورة</button>
+                <button type="button" class="btn-action btn-secondary" style="margin-top:0; flex:1;" onclick="closeSelfieCamera()">إلغاء</button>
+            </div>
+        </div>
+
+        <!-- شاشة السجلات والتقرير الإحصائي والنسخ الاحتياطي -->
+        <div id="recordsScreen" class="card hidden">
+            <h2 style="margin-bottom: 15px; text-align: right; color: var(--info);">📈 التقرير الإحصائي وسجل الحركات</h2>
+
+            <div id="backupReminderBanner" class="backup-banner hidden">
+                <span id="backupReminderText">⚠️ يُنصح بأخذ نسخة احتياطية شاملة للبيانات الآن.</span>
+                <button type="button" class="action-btn print-btn" onclick="exportAllDataBackup()">⬇️ حفظ نسخة احتياطية شاملة</button>
+            </div>
+
+            <div class="date-range-panel">
+                <div class="date-range-title">
+                    <span>📅 تحديد الفترة الزمنية (من تاريخ - إلى تاريخ) للتقرير والسجلات:</span>
+                    <span id="activeDateRangeBadge" style="color:#67E8F9;">الفترة: جميع التواريخ</span>
+                </div>
+                <div class="date-range-grid">
+                    <div>
+                        <label for="reportFromDate">من تاريخ:</label>
+                        <input type="date" id="reportFromDate" onchange="onDateRangeChange()">
+                    </div>
+                    <div>
+                        <label for="reportToDate">إلى تاريخ:</label>
+                        <input type="date" id="reportToDate" onchange="onDateRangeChange()">
+                    </div>
+                    <div>
+                        <button type="button" class="action-btn edit-btn" style="width:100%; padding:12px;" onclick="resetDateRange()">🔄 الكل (إلغاء التحديد)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statsSummary" class="stats-grid"></div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button type="button" class="action-btn print-btn" onclick="printStatsReport()">🖨️ طباعة التقرير الإحصائي</button>
+                <button type="button" class="action-btn print-btn" style="background: rgba(56, 189, 248, 0.18); color: #7DD3FC; border: 1px solid rgba(56, 189, 248, 0.55);" onclick="printFilteredRecordsList()">🖨️ طباعة السجلات المحددة</button>
+                <button type="button" class="action-btn edit-btn" onclick="exportAllDataBackup()">⬇️ تصدير نسخة احتياطية شاملة</button>
+                <label class="action-btn print-btn" style="margin: 0; cursor: pointer;">
+                    ⬆️ استيراد نسخة احتياطية شاملة <input type="file" id="importBackupInput" accept="application/json" style="display:none;" onchange="importAllDataBackup(event)">
+                </label>
+            </div>
+
+            <div class="filter-bar" id="filterBar">
+                <button type="button" class="filter-btn active" data-filter="all" onclick="setRecordFilter('all', this)">الكل</button>
+                <button type="button" class="filter-btn" data-filter="الأدخال" onclick="setRecordFilter('الأدخال', this)">📥 الأدخال</button>
+                <button type="button" class="filter-btn" data-filter="خروج للصيانة" onclick="setRecordFilter('خروج للصيانة', this)">🔧 خروج للصيانة</button>
+                <button type="button" class="filter-btn" data-filter="الأخراج" onclick="setRecordFilter('الأخراج', this)">🚚 الأخراج</button>
+                <button type="button" class="filter-btn" data-filter="زيارة فحص" onclick="setRecordFilter('زيارة فحص', this)">📋 زيارة فحص</button>
+                <button type="button" class="filter-btn" data-filter="pm" onclick="setRecordFilter('pm', this)">🛠️ PM</button>
+                <button type="button" class="filter-btn" data-filter="note" onclick="setRecordFilter('note', this)">📌 الملاحظات</button>
+                <button type="button" class="filter-btn" data-filter="change" onclick="setRecordFilter('change', this)">🔄 التغييرات</button>
+                <button type="button" class="filter-btn" data-filter="violation" onclick="setRecordFilter('violation', this)">⚠️ المخالفات</button>
+            </div>
+
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الفاحص، مسؤول الذمة، الملاحظة، نوع المخالفة، أو الجهاز..." onkeyup="applyFiltersAndSearch()" style="margin-bottom: 15px;">
+
+            <div id="recordsList"></div>
+            <button type="button" class="btn-action btn-secondary" onclick="goHome()">العودة للرئيسية</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- نافذة التنبيه المخصصة بدون عنوان المضيف -->
+<div id="customAlertModal" class="custom-alert-backdrop hidden">
+    <div class="custom-alert-box">
+        <div id="customAlertMessage" class="custom-alert-msg"></div>
+        <button type="button" class="custom-alert-btn" onclick="closeCustomAlert()">حسناً</button>
+    </div>
+</div>
+
+<!-- نافذة المعاينة والطباعة -->
+<div id="printPreviewModal" class="modal-backdrop hidden">
+    <div style="background:white; color:black; width:100%; max-width:720px; border-radius:16px; padding:30px; position:relative; direction:rtl; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+        <div id="modalDateRangeControls" class="no-print hidden" style="margin-bottom: 16px; padding: 14px; background: #F1F5F9; border-radius: 10px; border: 1px solid #CBD5E1;">
+            <div style="font-weight: 700; color: #0F172A; font-size: 14px; margin-bottom: 8px;">📅 تعديل تاريخ التقرير قبل الطباعة:</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <label style="margin:0; color:#1E293B; font-size:13px;">من:
+                    <input type="date" id="modalFromDate" onchange="syncFromModalDates()" style="width:auto; padding:7px 10px; font-size:13px; background:white; color:black; border:1px solid #94A3B8; margin-top:0;">
+                </label>
+                <label style="margin:0; color:#1E293B; font-size:13px;">إلى:
+                    <input type="date" id="modalToDate" onchange="syncFromModalDates()" style="width:auto; padding:7px 10px; font-size:13px; background:white; color:black; border:1px solid #94A3B8; margin-top:0;">
+                </label>
+                <button type="button" onclick="resetDateRangeFromModal()" style="background:#E2E8F0; color:#0F172A; border:1px solid #94A3B8; padding:7px 12px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;">الكل</button>
+            </div>
+        </div>
+        <div id="printableTicketArea"></div>
+        <div class="no-print" style="margin-top:25px; display:flex; gap:10px;">
+            <button type="button" onclick="smartPrint()" style="flex:1; background:#4F46E5; color:white; border:none; padding:14px; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer;">🖨️ طباعة أو حفظ كملف PDF</button>
+            <button type="button" onclick="closePrintPreview()" style="flex:1; background:#64748B; color:white; border:none; padding:14px; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer;">✖ إغلاق والعودة</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ADMIN_USER = "com66";
+    const ADMIN_PASS = "7815";
+    const QUICK_PIN = "7815";
+    const STORAGE_KEY = "warehouse_records";
+    const LAST_BACKUP_KEY = "warehouse_last_backup_ts";
+
+    let selfieStream = null;
+    let activeSelfieTarget = '';
+    let currentFilter = 'all';
+    let reportFromDateVal = '';
+    let reportToDateVal = '';
+    let currentFilteredRecordsCache = [];
+    let lastModalPrintMode = 'stats';
+
+    let visitorPad, staffPad, issuerPad;
+    let visitorSigned = false, staffSigned = false, issuerSigned = false;
+    let currentVisitorPhoto = "";
+    let currentStaffPhoto = "";
+
+    let currentMovementType = '';
+    let isDeviceReq = true;
+    let isCustodyReq = false;
+
+    function showAlert(msg) {
+        document.getElementById('customAlertMessage').innerText = msg;
+        document.getElementById('customAlertModal').classList.remove('hidden');
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').classList.add('hidden');
+    }
+
+    function getRecords() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveRecordsArray(records) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function getLocalDateInputValue() {
+        const now = new Date();
+        const offsetMs = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+    }
+
+    function getLocalDateTimeInputValue() {
+        const now = new Date();
+        const offsetMs = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - offsetMs).toISOString().slice(0, 16);
+    }
+
+    function formatCurrentDate() {
+        const now = new Date();
+        return now.getFullYear() + '-' +
+               String(now.getMonth() + 1).padStart(2, '0') + '-' +
+               String(now.getDate()).padStart(2, '0') + ' ' +
+               String(now.getHours()).padStart(2, '0') + ':' +
+               String(now.getMinutes()).padStart(2, '0');
+    }
+
+    function getRecordDateStr(record) {
+        if (record.category === 'pm' && record.inspectionDate) {
+            const pmMatch = String(record.inspectionDate).trim().match(/^(\d{4}-\d{2}-\d{2})/);
+            if (pmMatch) return pmMatch[1];
+        }
+        if (record.time) {
+            const match = String(record.time).trim().match(/^(\d{4}-\d{2}-\d{2})/);
+            if (match) return match[1];
+        }
+        if (typeof record.id === 'number' && !Number.isNaN(record.id) && record.id > 1000000000000) {
+            const d = new Date(record.id);
+            const offsetMs = d.getTimezoneOffset() * 60000;
+            return new Date(d.getTime() - offsetMs).toISOString().slice(0, 10);
+        }
+        return '';
+    }
+
+    function getRecordsByDateRange(records, fromDate, toDate) {
+        if (!fromDate && !toDate) return records;
+        return records.filter(r => {
+            const recDate = getRecordDateStr(r);
+            if (!recDate) return false;
+            if (fromDate && recDate < fromDate) return false;
+            if (toDate && recDate > toDate) return false;
+            return true;
+        });
+    }
+
+    function getDateRangeLabel(fromDate, toDate) {
+        if (fromDate && toDate) return `من ${fromDate} إلى ${toDate}`;
+        if (fromDate) return `من ${fromDate} إلى اليوم`;
+        if (toDate) return `حتى ${toDate}`;
+        return 'جميع التواريخ';
+    }
+
+    function syncDateRangeInputsUI() {
+        document.getElementById('reportFromDate').value = reportFromDateVal;
+        document.getElementById('reportToDate').value = reportToDateVal;
+        document.getElementById('modalFromDate').value = reportFromDateVal;
+        document.getElementById('modalToDate').value = reportToDateVal;
+        document.getElementById('activeDateRangeBadge').innerText = 'الفترة: ' + getDateRangeLabel(reportFromDateVal, reportToDateVal);
+    }
+
+    function onDateRangeChange() {
+        const fromVal = document.getElementById('reportFromDate').value;
+        const toVal = document.getElementById('reportToDate').value;
+
+        if (fromVal && toVal && fromVal > toVal) {
+            showAlert('⚠️ تاريخ (من) لا يمكن أن يكون بعد تاريخ (إلى)!');
+            document.getElementById('reportFromDate').value = reportFromDateVal;
+            document.getElementById('reportToDate').value = reportToDateVal;
+            return;
+        }
+
+        reportFromDateVal = fromVal;
+        reportToDateVal = toVal;
+        syncDateRangeInputsUI();
+        renderStatsCards(computeStats(getRecordsByDateRange(getRecords(), reportFromDateVal, reportToDateVal)));
+        applyFiltersAndSearch();
+    }
+
+    function resetDateRange() {
+        reportFromDateVal = '';
+        reportToDateVal = '';
+        syncDateRangeInputsUI();
+        renderStatsCards(computeStats(getRecords()));
+        applyFiltersAndSearch();
+    }
+
+    function syncFromModalDates() {
+        const fromVal = document.getElementById('modalFromDate').value;
+        const toVal = document.getElementById('modalToDate').value;
+
+        if (fromVal && toVal && fromVal > toVal) {
+            showAlert('⚠️ تاريخ (من) لا يمكن أن يكون بعد تاريخ (إلى)!');
+            document.getElementById('modalFromDate').value = reportFromDateVal;
+            document.getElementById('modalToDate').value = reportToDateVal;
+            return;
+        }
+
+        reportFromDateVal = fromVal;
+        reportToDateVal = toVal;
+        syncDateRangeInputsUI();
+        renderStatsCards(computeStats(getRecordsByDateRange(getRecords(), reportFromDateVal, reportToDateVal)));
+        applyFiltersAndSearch();
+
+        if (lastModalPrintMode === 'records') {
+            printFilteredRecordsList();
+        } else {
+            printStatsReport();
+        }
+    }
+
+    function resetDateRangeFromModal() {
+        reportFromDateVal = '';
+        reportToDateVal = '';
+        syncDateRangeInputsUI();
+        renderStatsCards(computeStats(getRecords()));
+        applyFiltersAndSearch();
+
+        if (lastModalPrintMode === 'records') {
+            printFilteredRecordsList();
+        } else {
+            printStatsReport();
+        }
+    }
+
+    function switchLoginMode(mode) {
+        const credSec = document.getElementById('credLoginSection');
+        const bioSec = document.getElementById('bioLoginSection');
+        const tabCred = document.getElementById('tabCredBtn');
+        const tabBio = document.getElementById('tabBioBtn');
+
+        if (mode === 'cred') {
+            credSec.classList.remove('hidden');
+            bioSec.classList.add('hidden');
+            tabCred.classList.add('active');
+            tabBio.classList.remove('active');
+        } else {
+            credSec.classList.add('hidden');
+            bioSec.classList.remove('hidden');
+            tabBio.classList.add('active');
+            tabCred.classList.remove('active');
+        }
+    }
+
+    function loginWithPin() {
+        const pin = document.getElementById('quickPinInput').value.trim();
+        if (pin === QUICK_PIN) {
+            document.getElementById('quickPinInput').value = '';
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainAppContent').classList.remove('hidden');
+        } else {
+            showAlert('❌ الرمز السريع غير صحيح!');
+        }
+    }
+
+    function checkLogin() {
+        const u = document.getElementById('loginUser').value.trim();
+        const p = document.getElementById('loginPass').value.trim();
+        if (u === ADMIN_USER && p === ADMIN_PASS) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainAppContent').classList.remove('hidden');
+        } else {
+            showAlert('❌ خطأ: اسم المستخدم أو كلمة المرور غير صحيحة!');
+        }
+    }
+
+    function logout() {
+        document.getElementById('mainAppContent').classList.add('hidden');
+        document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function initSignatures(types) {
+        types.forEach(type => {
+            const canvas = document.getElementById(type + 'SigCanvas');
+            if (canvas) {
+                canvas.width = canvas.offsetWidth || 400;
+                canvas.height = 130;
+                const pad = setupCanvas(canvas, type);
+                if (type === 'visitor') visitorPad = pad;
+                if (type === 'staff') staffPad = pad;
+                if (type === 'issuer') issuerPad = pad;
+            }
+        });
+    }
+
+    function setupCanvas(canvas, type) {
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0284C7';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        let drawing = false;
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+        canvas.addEventListener('mousemove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+        canvas.addEventListener('mouseup', () => { drawing = false; });
+        canvas.addEventListener('mouseleave', () => { drawing = false; });
+
+        canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', () => { drawing = false; });
+
+        return {
+            clear: () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (type === 'visitor') visitorSigned = false;
+                if (type === 'staff') staffSigned = false;
+                if (type === 'issuer') issuerSigned = false;
+            },
+            isEmpty: () => {
+                const blank = document.createElement('canvas');
+                blank.width = canvas.width;
+                blank.height = canvas.height;
+                return canvas.toDataURL() === blank.toDataURL();
+            },
+            setDataFromBase64: (dataUrl) => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+                img.src = dataUrl;
+            },
+            getData: () => canvas.toDataURL()
+        };
+    }
+
+    function checkOtherViolationType() {
+        const val = document.getElementById('violationType').value;
+        const box = document.getElementById('otherViolationBox');
+        if (val === 'أخرى') {
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+            document.getElementById('otherViolationInput').value = '';
+        }
+    }
+
+    function toggleSigBox(type) {
+        const container = document.getElementById(type + 'SigContainer');
+        container.classList.toggle('hidden');
+    }
+
+    function hideSigBox(type) {
+        const pad = (type === 'visitor') ? visitorPad : (type === 'staff' ? staffPad : issuerPad);
+
+        if (!pad || pad.isEmpty()) {
+            showAlert('⚠️ يرجى رسم التوقيع أولاً قبل الاعتماد والإغلاق!');
+            return;
+        }
+
+        if (type === 'visitor') visitorSigned = true;
+        if (type === 'staff') staffSigned = true;
+        if (type === 'issuer') issuerSigned = true;
+
+        document.getElementById(type + 'SigContainer').classList.add('hidden');
+        const btn = document.getElementById(type + 'ToggleBtn');
+        btn.classList.add('sig-done');
+        document.getElementById(type + 'ToggleText').innerText = 'تم التوقيع بنجاح ✓ (اضغط للتعديل)';
+    }
+
+    function clearSig(type) {
+        if (type === 'visitor' && visitorPad) {
+            visitorPad.clear();
+            visitorSigned = false;
+            document.getElementById('visitorToggleBtn').classList.remove('sig-done');
+            document.getElementById('visitorToggleText').innerText = 'اضغط هنا لفتح لوحة توقيع الفاحص';
+        }
+        if (type === 'staff' && staffPad) {
+            staffPad.clear();
+            staffSigned = false;
+            document.getElementById('staffToggleBtn').classList.remove('sig-done');
+            document.getElementById('staffToggleText').innerText = 'اضغط هنا لفتح لوحة توقيع المسؤول';
+        }
+        if (type === 'issuer' && issuerPad) {
+            issuerPad.clear();
+            issuerSigned = false;
+            document.getElementById('issuerToggleBtn').classList.remove('sig-done');
+            document.getElementById('issuerToggleText').innerText = 'اضغط هنا لفتح توقيع مُقدّم المخالفة';
+        }
+    }
+
+    function updatePhotoUI(type, photoUrl) {
+        if (type === 'visitor') {
+            currentVisitorPhoto = photoUrl;
+            if (photoUrl) {
+                document.getElementById('visitorPhotoPreviewImg').src = photoUrl;
+                document.getElementById('visitorPhotoPreviewContainer').classList.remove('hidden');
+                document.getElementById('visitorPhotoBtnContainer').classList.add('hidden');
+            } else {
+                document.getElementById('visitorPhotoPreviewContainer').classList.add('hidden');
+                document.getElementById('visitorPhotoBtnContainer').classList.remove('hidden');
+            }
+        } else if (type === 'staff') {
+            currentStaffPhoto = photoUrl;
+            if (photoUrl) {
+                document.getElementById('staffPhotoPreviewImg').src = photoUrl;
+                document.getElementById('staffPhotoPreviewContainer').classList.remove('hidden');
+                document.getElementById('staffPhotoBtnContainer').classList.add('hidden');
+            } else {
+                document.getElementById('staffPhotoPreviewContainer').classList.add('hidden');
+                document.getElementById('staffPhotoBtnContainer').classList.remove('hidden');
+            }
+        }
+    }
+
+    function retakePhoto(type) {
+        updatePhotoUI(type, "");
+    }
+
+    function handleFilePhoto(event, type) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                compressImage(e.target.result, 300, 300, 0.7, (compressedUrl) => {
+                    updatePhotoUI(type, compressedUrl);
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) {
+        const img = new Image();
+        img.onload = function() {
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+            } else {
+                if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+    }
+
+    function openSelfieCamera(targetType) {
+        activeSelfieTarget = targetType;
+        hideAllScreens();
+        document.getElementById('selfieScreen').classList.remove('hidden');
+
+        const video = document.getElementById('selfieVideo');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false })
+            .then(stream => {
+                selfieStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                showAlert('⚠️ تعذر تشغيل الكاميرا الأمامية: ' + err.message + '\nيمكنك استخدام خيار (اختيار من الجهاز) بدلاً منها.');
+                closeSelfieCamera();
+            });
+    }
+
+    function captureSelfiePhoto() {
+        const video = document.getElementById('selfieVideo');
+        const canvas = document.getElementById('selfieCanvas');
+        canvas.width = 300;
+        canvas.height = 300;
+
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        stopSelfieStream();
+
+        updatePhotoUI(activeSelfieTarget, dataUrl);
+        document.getElementById('selfieScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.remove('hidden');
+    }
+
+    function closeSelfieCamera() {
+        stopSelfieStream();
+        document.getElementById('selfieScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.remove('hidden');
+    }
+
+    function stopSelfieStream() {
+        if (selfieStream) {
+            selfieStream.getTracks().forEach(track => track.stop());
+            selfieStream = null;
+        }
+    }
+
+    function openPmForm(existingData = null) {
+        document.getElementById('editPmId').value = existingData ? existingData.id : '';
+        document.getElementById('pmInspectorName').value = existingData ? existingData.inspector : '';
+        document.getElementById('pmInspectionDate').value = existingData ? existingData.inspectionDate : getLocalDateInputValue();
+        document.getElementById('pmNotes').value = existingData ? existingData.details : '';
+
+        hideAllScreens();
+        document.getElementById('pmFormScreen').classList.remove('hidden');
+    }
+
+    function savePmRecord() {
+        const editId = document.getElementById('editPmId').value;
+        const inspector = document.getElementById('pmInspectorName').value.trim();
+        const inspectionDate = document.getElementById('pmInspectionDate').value.trim();
+        const details = document.getElementById('pmNotes').value.trim();
+
+        if (!inspector || !inspectionDate || !details) {
+            showAlert('⚠️ تنبيه: يرجى اختيار اسم الفاحص وتحديد تاريخ الفحص وكتابة ملاحظات الفحص!');
+            return;
+        }
+
+        try {
+            const recordId = editId ? parseInt(editId, 10) : Date.now();
+            let records = getRecords();
+
+            const record = {
+                id: recordId,
+                category: 'pm',
+                type: '🛠️ فحص PM',
+                inspector: inspector,
+                inspectionDate: inspectionDate,
+                details: details,
+                time: formatCurrentDate()
+            };
+
+            if (editId) {
+                records = records.map(r => r.id === recordId ? record : r);
+            } else {
+                records.unshift(record);
+            }
+
+            saveRecordsArray(records);
+            generateAndPreviewTicket(record);
+        } catch (e) {
+            showAlert('❌ خطأ في الحفظ: ' + e.message);
+        }
+    }
+
+    function openForm(type, needDevice, needCustody, existingData = null) {
+        currentMovementType = type;
+        isDeviceReq = needDevice;
+        isCustodyReq = needCustody;
+        visitorSigned = false;
+        staffSigned = false;
+
+        document.getElementById('formTitle').innerText = existingData ? 'تعديل حركة: ' + type : 'تسجيل حركة: ' + type;
+        document.getElementById('autoTime').innerText = '⏰ التاريخ والوقت: ' + (existingData ? existingData.time : formatCurrentDate());
+        document.getElementById('editRecordId').value = existingData ? existingData.id : '';
+
+        document.getElementById('visitorName').value = existingData ? existingData.visitor : '';
+        document.getElementById('staffName').value = existingData ? existingData.staff : '';
+        document.getElementById('deviceType').value = existingData ? existingData.device : '';
+        document.getElementById('serialNumber').value = existingData ? existingData.serial : '';
+        document.getElementById('custodyHolder').value = existingData && existingData.custody && existingData.custody !== '-' ? existingData.custody : '';
+        document.getElementById('details').value = existingData ? existingData.details : '';
+
+        updatePhotoUI('visitor', existingData ? (existingData.visitorPhoto || "") : "");
+        updatePhotoUI('staff', existingData ? (existingData.staffPhoto || "") : "");
+
+        document.getElementById('visitorSigContainer').classList.add('hidden');
+        document.getElementById('staffSigContainer').classList.add('hidden');
+
+        if (existingData) {
+            visitorSigned = true;
+            staffSigned = true;
+            document.getElementById('visitorToggleBtn').classList.add('sig-done');
+            document.getElementById('visitorToggleText').innerText = 'التوقيع محفوظ مسبقاً ✓ (اضغط للتعديل)';
+            document.getElementById('staffToggleBtn').classList.add('sig-done');
+            document.getElementById('staffToggleText').innerText = 'التوقيع محفوظ مسبقاً ✓ (اضغط للتعديل)';
+        } else {
+            document.getElementById('visitorToggleBtn').classList.remove('sig-done');
+            document.getElementById('visitorToggleText').innerText = 'اضغط هنا لفتح لوحة توقيع الفاحص';
+            document.getElementById('staffToggleBtn').classList.remove('sig-done');
+            document.getElementById('staffToggleText').innerText = 'اضغط هنا لفتح لوحة توقيع المسؤول';
+        }
+
+        if (needDevice) {
+            document.getElementById('deviceFields').classList.remove('hidden');
+            document.getElementById('detailsLabel').innerText = 'تفاصيل العطل أو جهة النقل أو الملاحظات: *';
+        } else {
+            document.getElementById('deviceFields').classList.add('hidden');
+            document.getElementById('detailsLabel').innerText = 'ماذا فعل الفني أثناء الفحص؟ *';
+        }
+
+        if (needCustody) {
+            document.getElementById('custodyFieldBox').classList.remove('hidden');
+        } else {
+            document.getElementById('custodyFieldBox').classList.add('hidden');
+        }
+
+        hideAllScreens();
+        document.getElementById('formScreen').classList.remove('hidden');
+
+        setTimeout(() => {
+            initSignatures(['visitor', 'staff']);
+            if (existingData) {
+                if (existingData.visitorSig && visitorPad) visitorPad.setDataFromBase64(existingData.visitorSig);
+                if (existingData.staffSig && staffPad) staffPad.setDataFromBase64(existingData.staffSig);
+            }
+        }, 100);
+    }
+
+    function openNotesForm(existingData = null) {
+        document.getElementById('notesAutoTime').innerText = '⏰ الوقت: ' + (existingData ? existingData.time : formatCurrentDate());
+        document.getElementById('editNoteId').value = existingData ? existingData.id : '';
+        document.getElementById('noteTitle').value = existingData ? existingData.title : '';
+        document.getElementById('noteDetails').value = existingData ? existingData.details : '';
+
+        hideAllScreens();
+        document.getElementById('notesFormScreen').classList.remove('hidden');
+    }
+
+    function openChangesForm(existingData = null) {
+        document.getElementById('changesAutoTime').innerText = '⏰ الوقت: ' + (existingData ? existingData.time : formatCurrentDate());
+        document.getElementById('editChangeId').value = existingData ? existingData.id : '';
+        document.getElementById('changeTitle').value = existingData ? existingData.title : '';
+        document.getElementById('changeDetails').value = existingData ? existingData.details : '';
+
+        hideAllScreens();
+        document.getElementById('changesFormScreen').classList.remove('hidden');
+    }
+
+    function openViolationForm(existingData = null) {
+        issuerSigned = false;
+        document.getElementById('editViolationId').value = existingData ? existingData.id : '';
+
+        const nowStr = existingData ? existingData.occurrenceTime.replace(' ', 'T') : getLocalDateTimeInputValue();
+        document.getElementById('violationOccurrenceTime').value = nowStr;
+
+        document.getElementById('violatorName').value = existingData ? existingData.violator : '';
+
+        const typeVal = existingData ? existingData.type.replace('⚠️ مخالفة إدارية: ', '') : '';
+        const selectElem = document.getElementById('violationType');
+        let found = false;
+        for (let i = 0; i < selectElem.options.length; i++) {
+            if (selectElem.options[i].value === typeVal) {
+                selectElem.value = typeVal;
+                found = true;
+                break;
+            }
+        }
+        if (!found && typeVal) {
+            selectElem.value = 'أخرى';
+            document.getElementById('otherViolationBox').classList.remove('hidden');
+            document.getElementById('otherViolationInput').value = typeVal;
+        } else {
+            document.getElementById('otherViolationBox').classList.add('hidden');
+            document.getElementById('otherViolationInput').value = '';
+        }
+
+        document.getElementById('issuerName').value = existingData ? existingData.issuer : '';
+        document.getElementById('violationEvidence').value = existingData ? existingData.evidence : '';
+        document.getElementById('violationDetails').value = existingData ? existingData.details : '';
+
+        document.getElementById('issuerSigContainer').classList.add('hidden');
+        if (existingData) {
+            issuerSigned = true;
+            document.getElementById('issuerToggleBtn').classList.add('sig-done');
+            document.getElementById('issuerToggleText').innerText = 'التوقيع محفوظ مسبقاً ✓ (اضغط للتعديل)';
+        } else {
+            document.getElementById('issuerToggleBtn').classList.remove('sig-done');
+            document.getElementById('issuerToggleText').innerText = 'اضغط هنا لفتح توقيع مُقدّم المخالفة';
+        }
+
+        hideAllScreens();
+        document.getElementById('violationFormScreen').classList.remove('hidden');
+
+        setTimeout(() => {
+            initSignatures(['issuer']);
+            if (existingData && existingData.issuerSig && issuerPad) {
+                issuerPad.setDataFromBase64(existingData.issuerSig);
+            }
+        }, 100);
+    }
+
+    function hideAllScreens() {
+        document.getElementById('homeScreen').classList.add('hidden');
+        document.getElementById('pmFormScreen').classList.add('hidden');
+        document.getElementById('formScreen').classList.add('hidden');
+        document.getElementById('notesFormScreen').classList.add('hidden');
+        document.getElementById('changesFormScreen').classList.add('hidden');
+        document.getElementById('violationFormScreen').classList.add('hidden');
+        document.getElementById('recordsScreen').classList.add('hidden');
+        document.getElementById('selfieScreen').classList.add('hidden');
+    }
+
+    function goHome() {
+        stopSelfieStream();
+        hideAllScreens();
+        document.getElementById('homeScreen').classList.remove('hidden');
+    }
+
+    function openPrintModalWithHtml(htmlContent, showDateRangeBar = false) {
+        const modalControls = document.getElementById('modalDateRangeControls');
+        if (modalControls) {
+            modalControls.classList.toggle('hidden', !showDateRangeBar);
+            if (showDateRangeBar) syncDateRangeInputsUI();
+        }
+        document.getElementById('printableTicketArea').innerHTML = htmlContent;
+        document.getElementById('printPreviewModal').classList.remove('hidden');
+    }
+
+    function generateAndPreviewTicket(record) {
+        let htmlContent = `
+            <div style="border: 2px solid #000; padding: 25px; border-radius: 12px; background: #ffffff; color: #000000;">
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h2 style="color: #000; font-size: 22px;">📋 تكت رسمي - إدارة الغرف الأمنة</h2>
+                    <p style="color: #333; font-size: 14px; margin-top: 5px;">تاريخ الإصدار: ${record.time}</p>
+                </div>
+        `;
+
+        if (record.category === 'pm') {
+            htmlContent += `
+                <div style="background: #F5F3FF; border: 1px solid #7C3AED; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #5B21B6;">
+                    <strong>🛠️ النوع:</strong> ${record.type}
+                </div>
+                <p style="margin: 8px 0;"><strong>👤 اسم الفاحص:</strong> ${record.inspector}</p>
+                <p style="margin: 8px 0;"><strong>📅 تاريخ الفحص:</strong> ${record.inspectionDate}</p>
+                <p style="margin: 8px 0;"><strong>📝 ملاحظات الفحص:</strong> ${record.details}</p>
+            `;
+        } else if (record.category === 'violation') {
+            htmlContent += `
+                <div style="background: #FFF5F5; border: 1px solid #E53E3E; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #9B2C2C;">
+                    <strong>⚠️ النوع:</strong> ${record.type}
+                </div>
+                <p style="margin: 8px 0;"><strong>⏰ وقت وقوع المخالفة:</strong> ${record.occurrenceTime}</p>
+                <p style="margin: 8px 0;"><strong>👤 الشخص المخالف:</strong> ${record.violator}</p>
+                <p style="margin: 8px 0;"><strong>🔍 الأدلة والثبوتيات:</strong> ${record.evidence}</p>
+                <p style="margin: 8px 0;"><strong>📝 التفاصيل:</strong> ${record.details}</p>
+                <div style="margin-top: 25px; border-top: 1px dashed #CBD5E1; padding-top: 15px;">
+                    <p><strong>🛡️ مُقدّم المخالفة:</strong> ${record.issuer}</p>
+                    ${record.issuerSig ? `<div style="margin-top:8px;"><img src="${record.issuerSig}" style="width: 180px; height: 60px; object-fit: contain; border: 1px solid #CBD5E1; background: #FFF; border-radius: 6px;"></div>` : ''}
+                </div>
+            `;
+        } else if (record.category === 'note') {
+            htmlContent += `
+                <div style="background: #FFFAF0; border: 1px solid #DD6B20; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #C05621;">
+                    <strong>📌 النوع:</strong> ${record.type}
+                </div>
+                <p style="margin: 8px 0;"><strong>العنوان:</strong> ${record.title}</p>
+                <p style="margin: 8px 0;"><strong>التفاصيل:</strong> ${record.details}</p>
+            `;
+        } else if (record.category === 'change') {
+            htmlContent += `
+                <div style="background: #EBF8FF; border: 1px solid #3182CE; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #2B6CB0;">
+                    <strong>🔄 النوع:</strong> ${record.type}
+                </div>
+                <p style="margin: 8px 0;"><strong>العنصر / التغيير:</strong> ${record.title}</p>
+                <p style="margin: 8px 0;"><strong>التفاصيل:</strong> ${record.details}</p>
+            `;
+        } else {
+            htmlContent += `
+                <div style="background: #EEF2F6; border: 1px solid #4F46E5; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #3730A3;">
+                    <strong>🏷️ نوع الحركة:</strong> [${record.type}]
+                </div>
+                <p style="margin: 8px 0;"><strong>💻 الجهاز:</strong> ${record.device}</p>
+                <p style="margin: 8px 0;"><strong>السيريال:</strong> ${record.serial}</p>
+                ${record.custody && record.custody !== '-' ? `<p style="margin: 8px 0;"><strong>📦 مسؤول الذمة:</strong> ${record.custody}</p>` : ''}
+                <p style="margin: 8px 0;"><strong>📝 التفاصيل:</strong> ${record.details}</p>
+                <div style="display: flex; justify-content: space-between; margin-top: 30px; border-top: 1px dashed #CBD5E1; padding-top: 15px; gap: 15px;">
+                    <div style="flex: 1; text-align: center;">
+                        ${record.visitorPhoto ? `<img src="${record.visitorPhoto}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid #CBD5E1; margin-bottom: 5px;"><br>` : ''}
+                        <p style="font-weight: bold;">👤 الفاحص: ${record.visitor}</p>
+                        ${record.visitorSig ? `<img src="${record.visitorSig}" style="width: 140px; height: 45px; object-fit: contain; border: 1px solid #CBD5E1; background: #FFF; border-radius: 6px; margin-top:4px;">` : ''}
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        ${record.staffPhoto ? `<img src="${record.staffPhoto}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid #CBD5E1; margin-bottom: 5px;"><br>` : ''}
+                        <p style="font-weight: bold;">🛡️ المسؤول: ${record.staff}</p>
+                        ${record.staffSig ? `<img src="${record.staffSig}" style="width: 140px; height: 45px; object-fit: contain; border: 1px solid #CBD5E1; background: #FFF; border-radius: 6px; margin-top:4px;">` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        htmlContent += `</div>`;
+        openPrintModalWithHtml(htmlContent, false);
+    }
+
+    function closePrintPreview() {
+        document.getElementById('printPreviewModal').classList.add('hidden');
+        document.getElementById('modalDateRangeControls').classList.add('hidden');
+        if (!document.getElementById('recordsScreen').classList.contains('hidden')) {
+            renderStatsAndRecords();
+        } else {
+            goHome();
+        }
+    }
+
+    function saveRecord() {
+        const editId = document.getElementById('editRecordId').value;
+        const visitor = document.getElementById('visitorName').value.trim();
+        const staff = document.getElementById('staffName').value.trim();
+        const device = isDeviceReq ? document.getElementById('deviceType').value.trim() : 'فحص فقط';
+        const serial = isDeviceReq ? document.getElementById('serialNumber').value.trim() : '-';
+        const custody = isCustodyReq ? document.getElementById('custodyHolder').value.trim() : '-';
+        const details = document.getElementById('details').value.trim();
+
+        if (!visitor || !staff || (isDeviceReq && (!device || !serial)) || (isCustodyReq && !custody) || !details) {
+            showAlert('⚠️ تنبيه: يرجى ملء جميع الحقول المطلوبة قبل الحفظ!');
+            return;
+        }
+
+        if (!visitorSigned || !visitorPad || visitorPad.isEmpty() || !staffSigned || !staffPad || staffPad.isEmpty()) {
+            showAlert('🚫 عذراً: يجب إتمام الاعتماد والتوقيع لكل من الفاحص والمسؤول!');
+            return;
+        }
+
+        try {
+            const recordId = editId ? parseInt(editId, 10) : Date.now();
+            let records = getRecords();
+
+            const record = {
+                id: recordId,
+                category: 'movement',
+                type: currentMovementType,
+                visitor: visitor,
+                visitorPhoto: currentVisitorPhoto,
+                visitorSig: visitorPad.getData(),
+                staff: staff,
+                staffPhoto: currentStaffPhoto,
+                staffSig: staffPad.getData(),
+                device: device,
+                serial: serial,
+                custody: custody,
+                details: details,
+                time: formatCurrentDate()
+            };
+
+            if (editId) {
+                records = records.map(r => r.id === recordId ? record : r);
+            } else {
+                records.unshift(record);
+            }
+
+            saveRecordsArray(records);
+            generateAndPreviewTicket(record);
+        } catch (e) {
+            showAlert('❌ حدث خطأ أثناء الحفظ (ربما مساحة التخزين ممتلئة): ' + e.message);
+        }
+    }
+
+    function saveNoteRecord() {
+        const editId = document.getElementById('editNoteId').value;
+        const title = document.getElementById('noteTitle').value.trim();
+        const details = document.getElementById('noteDetails').value.trim();
+
+        if (!title || !details) {
+            showAlert('⚠️ تنبيه: يرجى ملء عنوان وتفاصيل الملاحظة!');
+            return;
+        }
+
+        try {
+            const recordId = editId ? parseInt(editId, 10) : Date.now();
+            let records = getRecords();
+
+            const record = {
+                id: recordId,
+                category: 'note',
+                type: '📌 ملاحظة إدارية',
+                title: title,
+                details: details,
+                time: formatCurrentDate()
+            };
+
+            if (editId) {
+                records = records.map(r => r.id === recordId ? record : r);
+            } else {
+                records.unshift(record);
+            }
+
+            saveRecordsArray(records);
+            generateAndPreviewTicket(record);
+        } catch (e) {
+            showAlert('❌ خطأ في الحفظ: ' + e.message);
+        }
+    }
+
+    function saveChangeRecord() {
+        const editId = document.getElementById('editChangeId').value;
+        const title = document.getElementById('changeTitle').value.trim();
+        const details = document.getElementById('changeDetails').value.trim();
+
+        if (!title || !details) {
+            showAlert('⚠️ تنبيه: يرجى ملء عنوان وتفاصيل التغيير!');
+            return;
+        }
+
+        try {
+            const recordId = editId ? parseInt(editId, 10) : Date.now();
+            let records = getRecords();
+
+            const record = {
+                id: recordId,
+                category: 'change',
+                type: '🔄 سجل تغيير',
+                title: title,
+                details: details,
+                time: formatCurrentDate()
+            };
+
+            if (editId) {
+                records = records.map(r => r.id === recordId ? record : r);
+            } else {
+                records.unshift(record);
+            }
+
+            saveRecordsArray(records);
+            generateAndPreviewTicket(record);
+        } catch (e) {
+            showAlert('❌ خطأ في الحفظ: ' + e.message);
+        }
+    }
+
+    function saveViolationRecord() {
+        const editId = document.getElementById('editViolationId').value;
+        const occTimeInput = document.getElementById('violationOccurrenceTime').value;
+        const violator = document.getElementById('violatorName').value.trim();
+        let vType = document.getElementById('violationType').value;
+
+        if (vType === 'أخرى') {
+            const otherVal = document.getElementById('otherViolationInput').value.trim();
+            if (!otherVal) {
+                showAlert('⚠️ يرجى كتابة نوع المخالفة في الحقل المخصص!');
+                return;
+            }
+            vType = otherVal;
+        }
+
+        const issuer = document.getElementById('issuerName').value.trim();
+        const evidence = document.getElementById('violationEvidence').value.trim() || 'لا توجد أدلة مرفقة';
+        const details = document.getElementById('violationDetails').value.trim();
+
+        if (!occTimeInput || !violator || !vType || !issuer || !details) {
+            showAlert('⚠️ تنبيه: يرجى تحديد وقت وقوع المخالفة وملء جميع الحقول المطلوبة بدقة!');
+            return;
+        }
+
+        if (!issuerSigned || !issuerPad || issuerPad.isEmpty()) {
+            showAlert('🚫 عذراً: يجب إتمام التوقيع الإلكتروني لمُقدّم المخالفة قبل الحفظ!');
+            return;
+        }
+
+        try {
+            const recordId = editId ? parseInt(editId, 10) : Date.now();
+            let records = getRecords();
+            const formattedOccTime = occTimeInput.replace('T', ' ');
+
+            const record = {
+                id: recordId,
+                category: 'violation',
+                type: '⚠️ مخالفة إدارية: ' + vType,
+                occurrenceTime: formattedOccTime,
+                violator: violator,
+                issuer: issuer,
+                issuerSig: issuerPad.getData(),
+                evidence: evidence,
+                details: details,
+                time: formatCurrentDate()
+            };
+
+            if (editId) {
+                records = records.map(r => r.id === recordId ? record : r);
+            } else {
+                records.unshift(record);
+            }
+
+            saveRecordsArray(records);
+            generateAndPreviewTicket(record);
+        } catch (e) {
+            showAlert('❌ خطأ في الحفظ: ' + e.message);
+        }
+    }
+
+    function editRecord(id) {
+        const record = getRecords().find(r => r.id === id);
+        if (!record) return;
+
+        if (record.category === 'pm') {
+            openPmForm(record);
+        } else if (record.category === 'movement') {
+            const needDev = (record.type !== 'زيارة فحص');
+            const needCust = (record.type === 'الأدخال' || record.type === 'الأخراج');
+            openForm(record.type, needDev, needCust, record);
+        } else if (record.category === 'note') {
+            openNotesForm(record);
+        } else if (record.category === 'change') {
+            openChangesForm(record);
+        } else if (record.category === 'violation') {
+            openViolationForm(record);
+        }
+    }
+
+    function printExistingRecord(id) {
+        const record = getRecords().find(r => r.id === id);
+        if (record) {
+            generateAndPreviewTicket(record);
+        }
+    }
+
+    function computeStats(records) {
+        return {
+            total: records.length,
+            inputCount: records.filter(r => r.category === 'movement' && r.type === 'الأدخال').length,
+            maintCount: records.filter(r => r.category === 'movement' && r.type === 'خروج للصيانة').length,
+            outputCount: records.filter(r => r.category === 'movement' && r.type === 'الأخراج').length,
+            inspectCount: records.filter(r => r.category === 'movement' && r.type === 'زيارة فحص').length,
+            pmCount: records.filter(r => r.category === 'pm').length,
+            notesCount: records.filter(r => r.category === 'note').length,
+            changesCount: records.filter(r => r.category === 'change').length,
+            violationsCount: records.filter(r => r.category === 'violation').length
+        };
+    }
+
+    function renderStatsCards(stats) {
+        document.getElementById('statsSummary').innerHTML = `
+            <div class="stat-box"><div class="stat-label">إجمالي السجلات</div><div class="stat-num" style="color:var(--info);">${stats.total}</div></div>
+            <div class="stat-box"><div class="stat-label">📥 الأدخال</div><div class="stat-num" style="color:var(--success);">${stats.inputCount}</div></div>
+            <div class="stat-box"><div class="stat-label">🔧 خروج للصيانة</div><div class="stat-num" style="color:var(--warning);">${stats.maintCount}</div></div>
+            <div class="stat-box"><div class="stat-label">🚚 الأخراج</div><div class="stat-num" style="color:var(--info);">${stats.outputCount}</div></div>
+            <div class="stat-box"><div class="stat-label">📋 زيارة فحص</div><div class="stat-num" style="color:var(--purple);">${stats.inspectCount}</div></div>
+            <div class="stat-box"><div class="stat-label">🛠️ PM</div><div class="stat-num" style="color:#A78BFA;">${stats.pmCount}</div></div>
+            <div class="stat-box"><div class="stat-label">⚠️ المخالفات</div><div class="stat-num" style="color:var(--danger);">${stats.violationsCount}</div></div>
+            <div class="stat-box"><div class="stat-label">📌 الملاحظات</div><div class="stat-num" style="color:var(--warning);">${stats.notesCount}</div></div>
+            <div class="stat-box"><div class="stat-label">🔄 التغييرات</div><div class="stat-num" style="color:#38BDF8;">${stats.changesCount}</div></div>
+        `;
+    }
+
+    function printStatsReport() {
+        lastModalPrintMode = 'stats';
+        const rangeLabel = getDateRangeLabel(reportFromDateVal, reportToDateVal);
+        const rangeRecords = getRecordsByDateRange(getRecords(), reportFromDateVal, reportToDateVal);
+        const stats = computeStats(rangeRecords);
+
+        const htmlContent = `
+            <div style="border: 2px solid #000; padding: 25px; border-radius: 12px; background: #ffffff; color: #000000;">
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h2 style="color: #000; font-size: 22px;">📊 تقرير إحصائي - إدارة الغرف الأمنة</h2>
+                    <p style="color: #1E293B; font-size: 15px; font-weight: 700; margin-top: 6px;">الفترة المحددة: ${rangeLabel}</p>
+                    <p style="color: #333; font-size: 13px; margin-top: 4px;">تاريخ الطباعة: ${formatCurrentDate()}</p>
+                </div>
+                <p style="margin: 10px 0; font-size: 16px;"><strong>إجمالي السجلات (${rangeLabel}):</strong> ${stats.total}</p>
+                <hr style="margin: 12px 0;">
+                <p style="margin: 8px 0;"><strong>📥 حركات الأدخال:</strong> ${stats.inputCount}</p>
+                <p style="margin: 8px 0;"><strong>🔧 خروج للصيانة:</strong> ${stats.maintCount}</p>
+                <p style="margin: 8px 0;"><strong>🚚 حركات الأخراج:</strong> ${stats.outputCount}</p>
+                <p style="margin: 8px 0;"><strong>📋 زيارات فحص فقط:</strong> ${stats.inspectCount}</p>
+                <p style="margin: 8px 0;"><strong>🛠️ فحوصات PM:</strong> ${stats.pmCount}</p>
+                <p style="margin: 8px 0;"><strong>⚠️ المخالفات الإدارية:</strong> ${stats.violationsCount}</p>
+                <p style="margin: 8px 0;"><strong>📌 الملاحظات:</strong> ${stats.notesCount}</p>
+                <p style="margin: 8px 0;"><strong>🔄 التغييرات:</strong> ${stats.changesCount}</p>
+            </div>
+        `;
+        openPrintModalWithHtml(htmlContent, true);
+    }
+
+    function printFilteredRecordsList() {
+        lastModalPrintMode = 'records';
+        const rangeLabel = getDateRangeLabel(reportFromDateVal, reportToDateVal);
+        const list = currentFilteredRecordsCache;
+
+        if (!list || list.length === 0) {
+            showAlert('⚠️ لا توجد سجلات مطابقة للفترة أو الفلتر الحالي لطباعتها!');
+            return;
+        }
+
+        let rowsHtml = '';
+        list.forEach((r, idx) => {
+            if (r.category === 'pm') {
+                rowsHtml += `
+                    <div style="border:1px solid #CBD5E1; border-right:4px solid #7C3AED; border-radius:8px; padding:12px; margin-bottom:10px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; color:#5B21B6;">${idx + 1}. ${r.type} — <span style="font-size:12px; color:#475569;">تاريخ الفحص: ${r.inspectionDate}</span></div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>الفاحص:</strong> ${r.inspector} | <strong>وقت التسجيل:</strong> ${r.time}</div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>ملاحظات الفحص:</strong> ${r.details}</div>
+                    </div>
+                `;
+            } else if (r.category === 'violation') {
+                rowsHtml += `
+                    <div style="border:1px solid #CBD5E1; border-right:4px solid #E11D48; border-radius:8px; padding:12px; margin-bottom:10px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; color:#9F1239;">${idx + 1}. ${r.type} — <span style="font-size:12px; color:#475569;">وقت التسجيل: ${r.time}</span></div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>وقت وقوع المخالفة:</strong> ${r.occurrenceTime} | <strong>المخالف:</strong> ${r.violator} | <strong>مُقدّم المخالفة:</strong> ${r.issuer}</div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>الأدلة:</strong> ${r.evidence}</div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>التفاصيل:</strong> ${r.details}</div>
+                    </div>
+                `;
+            } else if (r.category === 'note' || r.category === 'change') {
+                rowsHtml += `
+                    <div style="border:1px solid #CBD5E1; border-right:4px solid #2563EB; border-radius:8px; padding:12px; margin-bottom:10px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; color:#1E3A8A;">${idx + 1}. ${r.type} — <span style="font-size:12px; color:#475569;">${r.time}</span></div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>العنوان:</strong> ${r.title}</div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>التفاصيل:</strong> ${r.details}</div>
+                    </div>
+                `;
+            } else {
+                rowsHtml += `
+                    <div style="border:1px solid #CBD5E1; border-right:4px solid #0284C7; border-radius:8px; padding:12px; margin-bottom:10px; page-break-inside:avoid;">
+                        <div style="font-weight:bold; color:#0F172A;">${idx + 1}. [${r.type}] — <span style="font-size:12px; color:#475569;">${r.time}</span></div>
+                        <div style="margin-top:4px; font-size:13px;"><strong>الفاحص:</strong> ${r.visitor} | <strong>المسؤول:</strong> ${r.staff}${r.custody && r.custody !== '-' ? ` | <strong>مسؤول الذمة:</strong> ${r.custody}` : ''}</div>
+                        ${r.serial !== '-' ? `<div style="margin-top:4px; font-size:13px;"><strong>الجهاز:</strong> ${r.device} | <strong>السيريال:</strong> ${r.serial}</div>` : ''}
+                        <div style="margin-top:4px; font-size:13px;"><strong>التفاصيل:</strong> ${r.details}</div>
+                    </div>
+                `;
+            }
+        });
+
+        const htmlContent = `
+            <div style="border: 2px solid #000; padding: 22px; border-radius: 12px; background: #ffffff; color: #000000;">
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 16px;">
+                    <h2 style="color: #000; font-size: 20px;">📋 كشف السجلات التفصيلية - إدارة الغرف الأمنة</h2>
+                    <p style="color: #1E293B; font-size: 14px; font-weight: 700; margin-top: 5px;">الفترة المحددة: ${rangeLabel} | عدد السجلات: ${list.length}</p>
+                    <p style="color: #475569; font-size: 12px; margin-top: 3px;">تاريخ الطباعة: ${formatCurrentDate()}</p>
+                </div>
+                ${rowsHtml}
+            </div>
+        `;
+        openPrintModalWithHtml(htmlContent, true);
+    }
+
+    function checkBackupReminder(recordsCount) {
+        const banner = document.getElementById('backupReminderBanner');
+        const textEl = document.getElementById('backupReminderText');
+        if (recordsCount === 0) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        const lastBackup = parseInt(localStorage.getItem(LAST_BACKUP_KEY) || '0', 10);
+        const daysSinceBackup = lastBackup ? (Date.now() - lastBackup) / (1000 * 60 * 60 * 24) : 999;
+
+        if (daysSinceBackup >= 7 || recordsCount >= 25) {
+            textEl.innerText = `⚠️ تذكير بالنسخ الاحتياطي: يوجد ${recordsCount} سجل، ولم يتم أخذ نسخة احتياطية منذ ${lastBackup ? Math.floor(daysSinceBackup) + ' يوم' : 'وقت طويل'}.`;
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+    }
+
+    function setRecordFilter(filterKey, btnElement) {
+        currentFilter = filterKey;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        if (btnElement) btnElement.classList.add('active');
+        applyFiltersAndSearch();
+    }
+
+    function applyFiltersAndSearch() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const dateScopedRecords = getRecordsByDateRange(getRecords(), reportFromDateVal, reportToDateVal);
+
+        const filtered = dateScopedRecords.filter(r => {
+            if (currentFilter !== 'all') {
+                if (['pm', 'note', 'change', 'violation'].includes(currentFilter)) {
+                    if (r.category !== currentFilter) return false;
+                } else {
+                    if (r.category !== 'movement' || r.type !== currentFilter) return false;
+                }
+            }
+
+            if (!query) return true;
+            return (r.inspector && r.inspector.toLowerCase().includes(query)) ||
+                   (r.inspectionDate && r.inspectionDate.toLowerCase().includes(query)) ||
+                   (r.visitor && r.visitor.toLowerCase().includes(query)) ||
+                   (r.staff && r.staff.toLowerCase().includes(query)) ||
+                   (r.custody && r.custody.toLowerCase().includes(query)) ||
+                   (r.violator && r.violator.toLowerCase().includes(query)) ||
+                   (r.issuer && r.issuer.toLowerCase().includes(query)) ||
+                   (r.device && r.device.toLowerCase().includes(query)) ||
+                   (r.serial && r.serial.toLowerCase().includes(query)) ||
+                   (r.type && r.type.toLowerCase().includes(query)) ||
+                   (r.title && r.title.toLowerCase().includes(query)) ||
+                   (r.evidence && r.evidence.toLowerCase().includes(query)) ||
+                   (r.details && r.details.toLowerCase().includes(query));
+        });
+
+        currentFilteredRecordsCache = filtered;
+        renderRecords(filtered);
+    }
+
+    function renderStatsAndRecords() {
+        const allRecords = getRecords();
+        syncDateRangeInputsUI();
+        renderStatsCards(computeStats(getRecordsByDateRange(allRecords, reportFromDateVal, reportToDateVal)));
+        checkBackupReminder(allRecords.length);
+        applyFiltersAndSearch();
+    }
+
+    function showRecords() {
+        hideAllScreens();
+        document.getElementById('recordsScreen').classList.remove('hidden');
+        currentFilter = 'all';
+        reportFromDateVal = '';
+        reportToDateVal = '';
+        document.querySelectorAll('.filter-btn').forEach((b, idx) => {
+            b.classList.toggle('active', idx === 0);
+        });
+        document.getElementById('searchInput').value = '';
+        renderStatsAndRecords();
+    }
+
+    function renderRecords(records) {
+        const listDiv = document.getElementById('recordsList');
+        if (records.length === 0) {
+            listDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:30px;">📭 لا توجد سجلات مطابقة للتاريخ أو الفلتر أو البحث.</p>';
+            return;
+        }
+
+        let html = '';
+        records.forEach(r => {
+            const actionButtons = `
+                <div class="record-actions">
+                    <button type="button" class="action-btn edit-btn" onclick="editRecord(${r.id})">✏️ تعديل</button>
+                    <button type="button" class="action-btn print-btn" onclick="printExistingRecord(${r.id})">🖨️ طباعة</button>
+                    <button type="button" class="action-btn delete-btn" onclick="deleteRecord(${r.id})">🗑️ حذف</button>
+                </div>
+            `;
+
+            if (r.category === 'pm') {
+                html += `
+                    <div class="record-item" style="border-right-color: var(--primary);">
+                        <div class="record-header">
+                            <strong style="color: #C4B5FD;">[${r.type}] - <span style="color: var(--text-muted); font-size:13px;">تاريخ الفحص: ${r.inspectionDate}</span></strong>
+                            ${actionButtons}
+                        </div>
+                        <div style="margin-top:6px;"><b>👤 اسم الفاحص:</b> ${r.inspector}</div>
+                        <div style="margin-top:6px;"><b>📝 ملاحظات الفحص:</b> ${r.details}</div>
+                        <div style="margin-top:6px; color:var(--text-muted); font-size:12px;">وقت التسجيل: ${r.time}</div>
+                    </div>
+                `;
+            } else if (r.category === 'violation') {
+                html += `
+                    <div class="record-item" style="border-right-color: var(--danger);">
+                        <div class="record-header">
+                            <strong style="color: var(--danger);">[${r.type}] - <span style="color: var(--text-muted); font-size:13px;">وقت الكتابة: ${r.time}</span></strong>
+                            ${actionButtons}
+                        </div>
+                        <div style="margin-top:6px; color:var(--warning);"><b>⏰ وقت وقوع المخالفة المحدّد:</b> ${r.occurrenceTime}</div>
+                        <div style="margin-top:6px;"><b>👤 الشخص المخالف:</b> ${r.violator}</div>
+                        <div style="margin-top:6px;"><b>🔍 الأدلة والثبوتيات:</b> ${r.evidence}</div>
+                        <div style="margin-top:6px;"><b>📝 التفاصيل:</b> ${r.details}</div>
+                        <div style="margin-top:10px; background:#0F172A; padding:8px 12px; border-radius:8px; border:1px solid var(--border);">
+                            <b>🛡️ مُقدّم المخالفة:</b> ${r.issuer}<br>
+                            ${r.issuerSig ? `<img src="${r.issuerSig}" style="width:100%; height:45px; background:white; border-radius:4px; margin-top:4px; object-fit:contain;">` : ''}
+                        </div>
+                    </div>
+                `;
+            } else if (r.category === 'note') {
+                html += `
+                    <div class="record-item" style="border-right-color: var(--warning);">
+                        <div class="record-header">
+                            <strong style="color: var(--warning);">[${r.type}] - <span style="color: var(--text-muted); font-size:13px;">${r.time}</span></strong>
+                            ${actionButtons}
+                        </div>
+                        <div style="margin-top:6px;"><b>📌 العنوان:</b> ${r.title}</div>
+                        <div style="margin-top:6px;"><b>📝 التفاصيل:</b> ${r.details}</div>
+                    </div>
+                `;
+            } else if (r.category === 'change') {
+                html += `
+                    <div class="record-item" style="border-right-color: var(--info);">
+                        <div class="record-header">
+                            <strong style="color: var(--info);">[${r.type}] - <span style="color: var(--text-muted); font-size:13px;">${r.time}</span></strong>
+                            ${actionButtons}
+                        </div>
+                        <div style="margin-top:6px;"><b>🔄 العنصر / التغيير:</b> ${r.title}</div>
+                        <div style="margin-top:6px;"><b>📝 التفاصيل:</b> ${r.details}</div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="record-item">
+                        <div class="record-header">
+                            <strong style="color: var(--info);">[${r.type}] - <span style="color: var(--text-muted); font-size:14px;">${r.time}</span></strong>
+                            ${actionButtons}
+                        </div>
+                        <div style="display:flex; gap:20px; margin-top:10px; flex-wrap:wrap;">
+                            <div style="background:#0F172A; padding:8px 12px; border-radius:8px; border:1px solid var(--border); flex:1; min-width:200px; text-align:center;">
+                                ${r.visitorPhoto ? `<img src="${r.visitorPhoto}" style="width:50px; height:50px; object-fit:cover; border-radius:50%; border:1px solid var(--border); margin-bottom:4px;"><br>` : ''}
+                                <b style="text-align:right; display:block;">👤 الفاحص: ${r.visitor}</b>
+                                ${r.visitorSig ? `<img src="${r.visitorSig}" style="width:100%; height:45px; background:white; border-radius:4px; margin-top:4px; object-fit:contain;">` : ''}
+                            </div>
+                            <div style="background:#0F172A; padding:8px 12px; border-radius:8px; border:1px solid var(--border); flex:1; min-width:200px; text-align:center;">
+                                ${r.staffPhoto ? `<img src="${r.staffPhoto}" style="width:50px; height:50px; object-fit:cover; border-radius:50%; border:1px solid var(--border); margin-bottom:4px;"><br>` : ''}
+                                <b style="text-align:right; display:block;">🛡️ المسؤول: ${r.staff}</b>
+                                ${r.staffSig ? `<img src="${r.staffSig}" style="width:100%; height:45px; background:white; border-radius:4px; margin-top:4px; object-fit:contain;">` : ''}
+                            </div>
+                        </div>
+                        ${r.serial !== '-' ? `<div style="margin-top:10px;"><b>💻 الجهاز:</b> ${r.device} | <span style="color:var(--warning);">السيريال: ${r.serial}</span></div>` : ''}
+                        ${r.custody && r.custody !== '-' ? `<div style="margin-top:6px; color:var(--success);"><b>📦 مسؤول الذمة:</b> ${r.custody}</div>` : ''}
+                        <div style="margin-top:6px;"><b>📝 التفاصيل:</b> ${r.details}</div>
+                    </div>
+                `;
+            }
+        });
+        listDiv.innerHTML = html;
+    }
+
+    function deleteRecord(id) {
+        const pass = prompt('🔐 أدخل رمز الإدارة لحذف هذا السجل :');
+        if (pass === ADMIN_PASS) {
+            const updated = getRecords().filter(r => r.id !== id);
+            saveRecordsArray(updated);
+            renderStatsAndRecords();
+        } else if (pass !== null) {
+            showAlert('❌ رمز الحذف غير صحيح!');
+        }
+    }
+
+    function getAllLocalStorageDump() {
+        const dump = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            dump[key] = localStorage.getItem(key);
+        }
+        return dump;
+    }
+
+    async function exportAllDataBackup() {
+        const records = getRecords();
+        const payload = {
+            exportedAt: formatCurrentDate(),
+            records: records,
+            allStorage: getAllLocalStorageDump()
+        };
+        const data = JSON.stringify(payload, null, 2);
+        const fileName = `security_rooms_full_backup_${formatCurrentDate().replace(/[: \/:]/g, '_')}.json`;
+        try {
+            const ok = await saveAndShareFile(fileName, data, 'application/json', 'حفظ النسخة الاحتياطية');
+            if (ok) {
+                localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
+                checkBackupReminder(records.length);
+            }
+        } catch (err) {
+            const msg = String((err && err.message) || err || '');
+            if (/cancel/i.test(msg)) return;
+            showAlert('❌ تعذر حفظ النسخة الاحتياطية: ' + msg);
+        }
+    }
+
+    function importAllDataBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+
+                if (parsed && parsed.allStorage && typeof parsed.allStorage === 'object') {
+                    Object.keys(parsed.allStorage).forEach(key => {
+                        localStorage.setItem(key, parsed.allStorage[key]);
+                    });
+                } else {
+                    const imported = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.records) ? parsed.records : null);
+                    if (!imported) {
+                        showAlert('❌ صيغة ملف النسخة الاحتياطية غير صحيحة!');
+                        return;
+                    }
+                    const current = getRecords();
+                    const map = new Map();
+                    [...imported, ...current].forEach(item => {
+                        if (item && item.id) map.set(item.id, item);
+                    });
+                    const merged = Array.from(map.values()).sort((a, b) => b.id - a.id);
+                    saveRecordsArray(merged);
+                }
+
+                localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()));
+                renderStatsAndRecords();
+                showAlert('✅ تم استعادة كافة البيانات بنجاح!');
+            } catch (err) {
+                showAlert('❌ تعذر قراءة الملف: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    /* ===== دعم تطبيق أندرويد (Capacitor) ===== */
+    function isNativeApp() {
+        return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+    }
+
+    function getCapPlugin(name) {
+        return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+    }
+
+    // داخل التطبيق: يحفظ الملف ويفتح قائمة المشاركة (حفظ في الملفات / واتساب / درايف...)
+    // داخل المتصفح: تحميل عادي
+    async function saveAndShareFile(fileName, textData, mimeType, dialogTitle) {
+        if (isNativeApp()) {
+            const FS = getCapPlugin('Filesystem');
+            const Share = getCapPlugin('Share');
+            if (!FS || !Share) {
+                throw new Error('إضافات الحفظ والمشاركة غير مثبتة في التطبيق');
+            }
+            const res = await FS.writeFile({ path: fileName, data: textData, directory: 'CACHE', encoding: 'utf8' });
+            await Share.share({ title: dialogTitle || fileName, url: res.uri, dialogTitle: dialogTitle || fileName });
+            return true;
+        }
+        const blob = new Blob([textData], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        return true;
+    }
+
+    // داخل التطبيق: يحفظ التقرير كملف HTML ويشاركه (افتحه بالمتصفح واطبعه أو احفظه PDF)
+    // داخل المتصفح: طباعة عادية
+    async function smartPrint() {
+        if (!isNativeApp()) {
+            window.print();
+            return;
+        }
+        try {
+            const area = document.getElementById('printableTicketArea');
+            const html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">' +
+                '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+                '<title>تقرير</title><style>' +
+                'body{font-family:Tahoma,Arial,sans-serif;background:#fff;color:#000;margin:0;padding:16px;direction:rtl}' +
+                'img{max-width:100%}@media print{body{padding:0}}' +
+                '</style></head><body>' + area.innerHTML + '</body></html>';
+            const stamp = formatCurrentDate().replace(/[^0-9]/g, '_');
+            await saveAndShareFile('report_' + stamp + '.html', html, 'text/html', 'مشاركة التقرير للطباعة');
+        } catch (err) {
+            const msg = String((err && err.message) || err || '');
+            if (/cancel/i.test(msg)) return;
+            showAlert('❌ تعذر تجهيز التقرير: ' + msg);
+        }
+    }
+</script>
+
+</body>
+</html>
